@@ -1,3 +1,11 @@
+# Marked Fork
+
+It is used in [MarkdownEditView](https://github.com/erdinc09/MarkdownEditView).  
+I added line number data in heading in order to sync the editor and preview. Later, I plan to synch line by line.
+
+__Original README:__
+---------------
+
 <a href="https://marked.js.org">
   <img width="60px" height="60px" src="https://marked.js.org/img/logo-black.svg" align="right" />
 </a>

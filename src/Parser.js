@@ -75,7 +75,9 @@ module.exports = class Parser {
             this.parseInline(token.tokens),
             token.depth,
             unescape(this.parseInline(token.tokens, this.textRenderer)),
-            this.slugger);
+            this.slugger,
+            token.dataLine
+            );
           continue;
         }
         case 'code': {

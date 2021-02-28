@@ -46,10 +46,13 @@ module.exports = class Renderer {
     return html;
   }
 
-  heading(text, level, raw, slugger) {
+  heading(text, level, raw, slugger, dataLine) {
     if (this.options.headerIds) {
       return '<h'
         + level
+        + ' dl="'
+        + dataLine
+        + '"'
         + ' id="'
         + this.options.headerPrefix
         + slugger.slug(raw)

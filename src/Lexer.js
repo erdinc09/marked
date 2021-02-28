@@ -48,13 +48,14 @@ function mangle(text) {
  * Block Lexer
  */
 module.exports = class Lexer {
-  constructor(options) {
+  constructor(options, lineNumbers) {
     this.tokens = [];
     this.tokens.links = Object.create(null);
     this.options = options || defaults;
     this.options.tokenizer = this.options.tokenizer || new Tokenizer();
     this.tokenizer = this.options.tokenizer;
     this.tokenizer.options = this.options;
+    this.lineNumbers = lineNumbers
 
     const rules = {
       block: block.normal,
@@ -88,8 +89,8 @@ module.exports = class Lexer {
   /**
    * Static Lex Method
    */
-  static lex(src, options) {
-    const lexer = new Lexer(options);
+  static lex(src, options, lineNumbers) {
+    const lexer = new Lexer(options, lineNumbers);
     return lexer.lex(src);
   }
 
@@ -116,6 +117,34 @@ module.exports = class Lexer {
     return this.tokens;
   }
 
+   updateLineNumberForPreviousToken(tokens, lineNumber){
+    let lastToken;
+
+    if(tokens.length > 0){
+      lastToken = tokens[tokens.length - 1];
+      if(!("dataLine" in lastToken)){
+        lastToken.dataLine = lineNumber;
+        
+        if(this.lineNumbers){
+          switch(lastToken.type){
+            case 'heading':
+              this.lineNumbers.push(lineNumber);
+          }
+        }
+        
+        lineNumber += lastToken.raw.split(/\n/).length - 1;
+      }
+    }
+   
+    return lineNumber;
+  }
+
+  updateLineNumberForCurrentToken(token, lineNumber){
+    token.dataLine = lineNumber;
+    lineNumber += token.raw.split(/\n/).length - 1;
+    return lineNumber;
+  }  
+
   /**
    * Lexing
    */
@@ -123,15 +152,21 @@ module.exports = class Lexer {
     if (this.options.pedantic) {
       src = src.replace(/^ +$/gm, '');
     }
-    let token, i, l, lastToken;
+    let token, i, l, lastToken, lineNumber = 1;
 
     while (src) {
+      
+      lineNumber = this.updateLineNumberForPreviousToken(tokens, lineNumber);
+      
       // newline
       if (token = this.tokenizer.space(src)) {
         src = src.substring(token.raw.length);
         if (token.type) {
           tokens.push(token);
         }
+        
+        lineNumber = this.updateLineNumberForCurrentToken(token, lineNumber);
+        
         continue;
       }
 
@@ -249,6 +284,8 @@ module.exports = class Lexer {
         continue;
       }
 
+      
+
       if (src) {
         const errMsg = 'Infinite loop on byte: ' + src.charCodeAt(0);
         if (this.options.silent) {
@@ -259,9 +296,14 @@ module.exports = class Lexer {
         }
       }
     }
+   
+    lineNumber = this.updateLineNumberForPreviousToken(tokens, lineNumber) + 1;
+    
 
     return tokens;
   }
+
+
 
   inline(tokens) {
     let i,
