@@ -83,7 +83,8 @@ module.exports = class Parser {
         case 'code': {
           out += this.renderer.code(token.text,
             token.lang,
-            token.escaped);
+            token.escaped,
+            token.dataLine);
           continue;
         }
         case 'table': {

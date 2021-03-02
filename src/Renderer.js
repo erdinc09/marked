@@ -12,7 +12,7 @@ module.exports = class Renderer {
     this.options = options || defaults;
   }
 
-  code(code, infostring, escaped) {
+  code(code, infostring, escaped, dataLine) {
     const lang = (infostring || '').match(/\S*/)[0];
     if (this.options.highlight) {
       const out = this.options.highlight(code, lang);
@@ -25,7 +25,12 @@ module.exports = class Renderer {
     code = code.replace(/\n$/, '') + '\n';
 
     if (!lang) {
-      return '<pre><code>'
+      return '<pre><code'
+        + ' dl="'
+        + dataLine
+        + '"'
+        + '>'
+        +
         + (escaped ? code : escape(code, true))
         + '</code></pre>\n';
     }
@@ -33,7 +38,11 @@ module.exports = class Renderer {
     return '<pre><code class="'
       + this.options.langPrefix
       + escape(lang, true)
-      + '">'
+      +'"'
+      + ' dl="'
+      + dataLine
+      + '"'
+      + '>'
       + (escaped ? code : escape(code, true))
       + '</code></pre>\n';
   }
