@@ -170,7 +170,7 @@ module.exports = class Parser {
           continue;
         }
         case 'paragraph': {
-          out += this.renderer.paragraph(this.parseInline(token.tokens));
+          out += this.renderer.paragraph(this.parseInline(token.tokens),token.dataLine);
           continue;
         }
         case 'text': {

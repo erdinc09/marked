@@ -128,7 +128,8 @@ module.exports = class Lexer {
         if(this.lineNumbers){
           switch(lastToken.type){
             case 'heading':
-            case 'code':  
+            case 'code': 
+            case 'paragraph':  
               this.lineNumbers.push(lineNumber);
           }
         }

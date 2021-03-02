@@ -97,8 +97,15 @@ module.exports = class Renderer {
       + '> ';
   }
 
-  paragraph(text) {
-    return '<p>' + text + '</p>\n';
+  paragraph(text, dataLine) {
+    let currentLineNumber = dataLine;
+    let lines = text.split(/\n/);
+    let body = '';
+    for(const line in lines){
+      body += '<div'+' dl='+'"'+currentLineNumber+'"'+'>'+lines[line]+'</div>\n'
+      currentLineNumber++;
+    }
+    return '<p>' + body + '</p>\n';
   }
 
   table(header, body) {
