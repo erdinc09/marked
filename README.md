@@ -1,7 +1,9 @@
 # Marked Fork
 
 It is used in [MarkdownEditView](https://github.com/erdinc09/MarkdownEditView).  
-I added line number data in heading in order to sync the editor and preview. Later, I plan to synch line by line.
+I added line number data all tokens in order to sync the editor and preview.
+Code blocks now can not be synced line by line now, I plan to emulate it.
+Almost all previous tests are broken...
 
 __Original README:__
 ---------------

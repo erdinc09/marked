@@ -48,14 +48,14 @@ function mangle(text) {
  * Block Lexer
  */
 module.exports = class Lexer {
-  constructor(options, lineNumbers) {
+  constructor(options, codeBlockStartLineNumbers) {
     this.tokens = [];
     this.tokens.links = Object.create(null);
     this.options = options || defaults;
     this.options.tokenizer = this.options.tokenizer || new Tokenizer();
     this.tokenizer = this.options.tokenizer;
     this.tokenizer.options = this.options;
-    this.lineNumbers = lineNumbers
+    this.codeBlockStartLineNumbers = codeBlockStartLineNumbers
 
     const rules = {
       block: block.normal,
@@ -89,8 +89,8 @@ module.exports = class Lexer {
   /**
    * Static Lex Method
    */
-  static lex(src, options, lineNumbers) {
-    const lexer = new Lexer(options, lineNumbers);
+  static lex(src, options, codeBlockStartLineNumbers) {
+    const lexer = new Lexer(options, codeBlockStartLineNumbers);
     return lexer.lex(src);
   }
 
@@ -125,15 +125,12 @@ module.exports = class Lexer {
       if(!("dataLine" in lastToken)){
         lastToken.dataLine = lineNumber;
         
-        if(this.lineNumbers){
+        if(this.codeBlockStartLineNumbers){
           switch(lastToken.type){
-            case 'heading':
-            case 'code': 
-            case 'paragraph':  
-              this.lineNumbers.push(lineNumber);
+            case 'code':  
+              this.codeBlockStartLineNumbers.push(lineNumber);
           }
         }
-        
         lineNumber += lastToken.raw.split(/\n/).length - 1;
       }
     }
@@ -150,11 +147,11 @@ module.exports = class Lexer {
   /**
    * Lexing
    */
-  blockTokens(src, tokens = [], top = true) {
+  blockTokens(src, tokens = [], top = true, lineNumber = 1) {
     if (this.options.pedantic) {
       src = src.replace(/^ +$/gm, '');
     }
-    let token, i, l, lastToken, lineNumber = 1;
+    let token, i, l, lastToken;
 
     while (src) {
       
@@ -217,7 +214,7 @@ module.exports = class Lexer {
       // blockquote
       if (token = this.tokenizer.blockquote(src)) {
         src = src.substring(token.raw.length);
-        token.tokens = this.blockTokens(token.text, [], top);
+        token.tokens = this.blockTokens(token.text, [], top, lineNumber);
         tokens.push(token);
         continue;
       }
@@ -226,8 +223,11 @@ module.exports = class Lexer {
       if (token = this.tokenizer.list(src)) {
         src = src.substring(token.raw.length);
         l = token.items.length;
+        let listLineNumber = lineNumber;
         for (i = 0; i < l; i++) {
-          token.items[i].tokens = this.blockTokens(token.items[i].text, [], false);
+          token.items[i].tokens = this.blockTokens(token.items[i].text, [], false, listLineNumber);
+          //TODO:
+          listLineNumber += token.items[i].raw.split(/\n/).length;
         }
         tokens.push(token);
         continue;
@@ -299,7 +299,7 @@ module.exports = class Lexer {
       }
     }
    
-    lineNumber = this.updateLineNumberForPreviousToken(tokens, lineNumber) + 1;
+   this.updateLineNumberForPreviousToken(tokens, lineNumber) + 1;
     
 
     return tokens;
@@ -307,7 +307,7 @@ module.exports = class Lexer {
 
 
 
-  inline(tokens) {
+  inline(tokens, lineNumber=1) {
     let i,
       j,
       k,
@@ -323,7 +323,7 @@ module.exports = class Lexer {
         case 'text':
         case 'heading': {
           token.tokens = [];
-          this.inlineTokens(token.text, token.tokens);
+          this.inlineTokens(token.text, token.tokens, false, false, token.dataLine);
           break;
         }
         case 'table': {
@@ -334,10 +334,13 @@ module.exports = class Lexer {
 
           // header
           l2 = token.header.length;
+          let tableLineNumber = token.dataLine;
           for (j = 0; j < l2; j++) {
             token.tokens.header[j] = [];
-            this.inlineTokens(token.header[j], token.tokens.header[j]);
+            this.inlineTokens(token.header[j], token.tokens.header[j], false, false, tableLineNumber);
           }
+
+          tableLineNumber +=2;
 
           // cells
           l2 = token.cells.length;
@@ -346,20 +349,24 @@ module.exports = class Lexer {
             token.tokens.cells[j] = [];
             for (k = 0; k < row.length; k++) {
               token.tokens.cells[j][k] = [];
-              this.inlineTokens(row[k], token.tokens.cells[j][k]);
+              this.inlineTokens(row[k], token.tokens.cells[j][k], false, false, tableLineNumber);
             }
+            tableLineNumber++;
           }
 
           break;
         }
         case 'blockquote': {
-          this.inline(token.tokens);
+          this.inline(token.tokens, token.dataLine);
           break;
         }
         case 'list': {
           l2 = token.items.length;
+          let listLineNumber = lineNumber;
           for (j = 0; j < l2; j++) {
-            this.inline(token.items[j].tokens);
+            this.inline(token.items[j].tokens, listLineNumber);
+            
+            listLineNumber += token.items[j].raw.split(/\n/).length;
           }
           break;
         }
@@ -375,7 +382,7 @@ module.exports = class Lexer {
   /**
    * Lexing/Compiling
    */
-  inlineTokens(src, tokens = [], inLink = false, inRawBlock = false) {
+  inlineTokens(src, tokens = [], inLink = false, inRawBlock = false, lineNumber = 1) {
     let token, lastToken;
 
     // String with links masked to avoid interference with em and strong
@@ -410,6 +417,14 @@ module.exports = class Lexer {
       }
       keepPrevChar = false;
 
+      if(tokens.length > 0){
+        lastToken = tokens[tokens.length - 1];
+        if(!("dataLine" in lastToken)){
+          lastToken.dataLine = lineNumber;
+          lineNumber += lastToken.raw.split(/\n/).length - 1;
+        }
+      }
+
       // escape
       if (token = this.tokenizer.escape(src)) {
         src = src.substring(token.raw.length);
@@ -436,7 +451,7 @@ module.exports = class Lexer {
       if (token = this.tokenizer.link(src)) {
         src = src.substring(token.raw.length);
         if (token.type === 'link') {
-          token.tokens = this.inlineTokens(token.text, [], true, inRawBlock);
+          token.tokens = this.inlineTokens(token.text, [], true, inRawBlock, lineNumber);
         }
         tokens.push(token);
         continue;
@@ -447,7 +462,7 @@ module.exports = class Lexer {
         src = src.substring(token.raw.length);
         const lastToken = tokens[tokens.length - 1];
         if (token.type === 'link') {
-          token.tokens = this.inlineTokens(token.text, [], true, inRawBlock);
+          token.tokens = this.inlineTokens(token.text, [], true, inRawBlock, lineNumber);
           tokens.push(token);
         } else if (lastToken && token.type === 'text' && lastToken.type === 'text') {
           lastToken.raw += token.raw;
@@ -461,7 +476,7 @@ module.exports = class Lexer {
       // em & strong
       if (token = this.tokenizer.emStrong(src, maskedSrc, prevChar)) {
         src = src.substring(token.raw.length);
-        token.tokens = this.inlineTokens(token.text, [], inLink, inRawBlock);
+        token.tokens = this.inlineTokens(token.text, [], inLink, inRawBlock, lineNumber);
         tokens.push(token);
         continue;
       }
@@ -483,7 +498,7 @@ module.exports = class Lexer {
       // del (gfm)
       if (token = this.tokenizer.del(src)) {
         src = src.substring(token.raw.length);
-        token.tokens = this.inlineTokens(token.text, [], inLink, inRawBlock);
+        token.tokens = this.inlineTokens(token.text, [], inLink, inRawBlock, lineNumber);
         tokens.push(token);
         continue;
       }
@@ -492,6 +507,7 @@ module.exports = class Lexer {
       if (token = this.tokenizer.autolink(src, mangle)) {
         src = src.substring(token.raw.length);
         tokens.push(token);
+        token.tokens[0].dataLine=lineNumber;
         continue;
       }
 
@@ -499,6 +515,7 @@ module.exports = class Lexer {
       if (!inLink && (token = this.tokenizer.url(src, mangle))) {
         src = src.substring(token.raw.length);
         tokens.push(token);
+        token.tokens[0].dataLine=lineNumber;
         continue;
       }
 
@@ -527,6 +544,13 @@ module.exports = class Lexer {
         } else {
           throw new Error(errMsg);
         }
+      }
+    }
+
+    if(tokens.length > 0){
+      lastToken = tokens[tokens.length - 1];
+      if(!("dataLine" in lastToken)){
+        lastToken.dataLine = lineNumber;
       }
     }
 

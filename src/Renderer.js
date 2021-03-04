@@ -38,7 +38,7 @@ module.exports = class Renderer {
     return '<pre><code class="'
       + this.options.langPrefix
       + escape(lang, true)
-      +'"'
+      + '"'
       + ' dl="'
       + dataLine
       + '"'
@@ -59,9 +59,6 @@ module.exports = class Renderer {
     if (this.options.headerIds) {
       return '<h'
         + level
-        + ' dl="'
-        + dataLine
-        + '"'
         + ' id="'
         + this.options.headerPrefix
         + slugger.slug(raw)
@@ -97,22 +94,15 @@ module.exports = class Renderer {
       + '> ';
   }
 
-  paragraph(text, dataLine) {
-    let currentLineNumber = dataLine;
-    let lines = text.split(/\n/);
-    let body = '';
-    for(const line in lines){
-      body += '<div'+' dl='+'"'+currentLineNumber+'"'+'>'+lines[line]+'</div>\n'
-      currentLineNumber++;
-    }
-    return '<p>' + body + '</p>\n';
+  paragraph(text) {
+    return '<p>' + text + '</p>\n';
   }
 
-  table(header, body) {
+  table(header, body, dataLine) {
     if (body) body = '<tbody>' + body + '</tbody>';
 
-    return '<table>\n'
-      + '<thead>\n'
+    return '<table' + ' dl="' + dataLine + '">\n'
+      + '<thead' + ' dl="' + (dataLine + 1) + '">\n'
       + header
       + '</thead>\n'
       + body
@@ -140,8 +130,8 @@ module.exports = class Renderer {
     return '<em>' + text + '</em>';
   }
 
-  codespan(text) {
-    return '<code>' + text + '</code>';
+  codespan(text, dataLine) {
+    return '<code' + ' dl=' + '"' + dataLine + '">' + text + '</code>';
   }
 
   br() {
@@ -165,7 +155,7 @@ module.exports = class Renderer {
     return out;
   }
 
-  image(href, title, text) {
+  image(href, title, text, dataLine) {
     href = cleanUrl(this.options.sanitize, this.options.baseUrl, href);
     if (href === null) {
       return text;
@@ -175,11 +165,25 @@ module.exports = class Renderer {
     if (title) {
       out += ' title="' + title + '"';
     }
+    out += ' dl=' + '"' + dataLine + '"';
     out += this.options.xhtml ? '/>' : '>';
     return out;
   }
 
-  text(text) {
-    return text;
+  text(text, dataLine) {
+    if (dataLine !== 'undefined') {
+      let currentLineNumber = dataLine;
+      let lines = text.split(/\n/);
+      let body = '';
+      for (const line in lines) {
+        if (lines[line].length !== 0) {
+          body += '<span' + ' dl=' + '"' + currentLineNumber + '"' + '>' + lines[line] + '</span>\n'
+        }
+        currentLineNumber++;
+      }
+      return body;
+    } else {
+      return text;
+    }
   }
 };

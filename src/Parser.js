@@ -77,7 +77,7 @@ module.exports = class Parser {
             unescape(this.parseInline(token.tokens, this.textRenderer)),
             this.slugger,
             token.dataLine
-            );
+          );
           continue;
         }
         case 'code': {
@@ -117,7 +117,7 @@ module.exports = class Parser {
 
             body += this.renderer.tablerow(cell);
           }
-          out += this.renderer.table(header, body);
+          out += this.renderer.table(header, body, token.dataLine);
           continue;
         }
         case 'blockquote': {
@@ -170,7 +170,7 @@ module.exports = class Parser {
           continue;
         }
         case 'paragraph': {
-          out += this.renderer.paragraph(this.parseInline(token.tokens),token.dataLine);
+          out += this.renderer.paragraph(this.parseInline(token.tokens), token.dataLine);
           continue;
         }
         case 'text': {
@@ -223,7 +223,7 @@ module.exports = class Parser {
           break;
         }
         case 'image': {
-          out += renderer.image(token.href, token.title, token.text);
+          out += renderer.image(token.href, token.title, token.text, token.dataLine);
           break;
         }
         case 'strong': {
@@ -235,7 +235,7 @@ module.exports = class Parser {
           break;
         }
         case 'codespan': {
-          out += renderer.codespan(token.text);
+          out += renderer.codespan(token.text, token.dataLine);
           break;
         }
         case 'br': {
@@ -247,7 +247,7 @@ module.exports = class Parser {
           break;
         }
         case 'text': {
-          out += renderer.text(token.text);
+          out += renderer.text(token.text, token.dataLine);
           break;
         }
         default: {
