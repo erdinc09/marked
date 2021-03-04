@@ -84,7 +84,9 @@ module.exports = class Parser {
           out += this.renderer.code(token.text,
             token.lang,
             token.escaped,
-            token.dataLine);
+            token.dataLine,
+            token.lastLineNumber,
+            token.isFence);
           continue;
         }
         case 'table': {

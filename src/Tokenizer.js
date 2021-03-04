@@ -89,7 +89,8 @@ module.exports = class Tokenizer {
         codeBlockStyle: 'indented',
         text: !this.options.pedantic
           ? rtrim(text, '\n')
-          : text
+          : text,
+        isFence: false
       };
     }
   }
@@ -104,7 +105,8 @@ module.exports = class Tokenizer {
         type: 'code',
         raw,
         lang: cap[2] ? cap[2].trim() : cap[2],
-        text
+        text,
+        isFence: true
       };
     }
   }
@@ -512,7 +514,7 @@ module.exports = class Tokenizer {
   reflink(src, links) {
     let cap;
     if ((cap = this.rules.inline.reflink.exec(src))
-        || (cap = this.rules.inline.nolink.exec(src))) {
+      || (cap = this.rules.inline.nolink.exec(src))) {
       let link = (cap[2] || cap[1]).replace(/\s+/g, ' ');
       link = links[link.toLowerCase()];
       if (!link || !link.href) {

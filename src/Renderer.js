@@ -12,8 +12,8 @@ module.exports = class Renderer {
     this.options = options || defaults;
   }
 
-  code(code, infostring, escaped, dataLine) {
-    const lang = (infostring || '').match(/\S*/)[0];
+  code(code, infostring, escaped, dataLine, lastLineNumber, isFence) {
+    const lang = (infostring || 'plaintext').match(/\S*/)[0];
     if (this.options.highlight) {
       const out = this.options.highlight(code, lang);
       if (out != null && out !== code) {
@@ -23,13 +23,24 @@ module.exports = class Renderer {
     }
 
     code = code.replace(/\n$/, '') + '\n';
+    let dataLineStr = '';
+    for (let i = dataLine; i <= lastLineNumber; i++) {
+      dataLineStr += ' ' + i;
+    }
+    dataLineStr = dataLineStr.trim();
+
+    let isFenceStr = '';
+    if (isFence) {
+      isFenceStr = 'fence="true"';
+    }
 
     if (!lang) {
       return '<pre><code'
         + ' dl="'
-        + dataLine
-        + '"'
-        + '>'
+        + dataLineStr
+        + '" '
+        + isFenceStr
+        + ' >'
         +
         + (escaped ? code : escape(code, true))
         + '</code></pre>\n';
@@ -40,9 +51,10 @@ module.exports = class Renderer {
       + escape(lang, true)
       + '"'
       + ' dl="'
-      + dataLine
-      + '"'
-      + '>'
+      + dataLineStr
+      + '" '
+      + isFenceStr
+      + ' >'
       + (escaped ? code : escape(code, true))
       + '</code></pre>\n';
   }
