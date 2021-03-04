@@ -18,7 +18,7 @@ const {
 /**
  * Marked
  */
-function marked(src, opt, callback, lineNumbers) {
+function marked(src, opt, callback, codeBlockStartLineNumbers) {
   // throw error in case of non string input
   if (typeof src === 'undefined' || src === null) {
     throw new Error('marked(): input parameter is undefined or null');
@@ -41,7 +41,7 @@ function marked(src, opt, callback, lineNumbers) {
     let tokens;
 
     try {
-      tokens = Lexer.lex(src, opt, lineNumbers);
+      tokens = Lexer.lex(src, opt, codeBlockStartLineNumbers);
     } catch (e) {
       return callback(e);
     }
@@ -103,7 +103,7 @@ function marked(src, opt, callback, lineNumbers) {
   }
 
   try {
-    const tokens = Lexer.lex(src, opt, lineNumbers);
+    const tokens = Lexer.lex(src, opt, codeBlockStartLineNumbers);
     if (opt.walkTokens) {
       marked.walkTokens(tokens, opt.walkTokens);
     }
