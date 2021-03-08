@@ -67,7 +67,7 @@ module.exports = class Renderer {
     return html;
   }
 
-  heading(text, level, raw, slugger, dataLine) {
+  heading(text, level, raw, slugger) {
     if (this.options.headerIds) {
       return '<h'
         + level
@@ -84,8 +84,8 @@ module.exports = class Renderer {
     return '<h' + level + '>' + text + '</h' + level + '>\n';
   }
 
-  hr() {
-    return this.options.xhtml ? '<hr/>\n' : '<hr>\n';
+  hr(dataLine) {
+    return this.options.xhtml ? `<hr dl="${dataLine}"/>\n` : `<hr  dl="${dataLine}">\n`;
   }
 
   list(body, ordered, start) {

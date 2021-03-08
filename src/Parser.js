@@ -67,7 +67,7 @@ module.exports = class Parser {
           continue;
         }
         case 'hr': {
-          out += this.renderer.hr();
+          out += this.renderer.hr(token.dataLine);
           continue;
         }
         case 'heading': {
@@ -75,8 +75,7 @@ module.exports = class Parser {
             this.parseInline(token.tokens),
             token.depth,
             unescape(this.parseInline(token.tokens, this.textRenderer)),
-            this.slugger,
-            token.dataLine
+            this.slugger
           );
           continue;
         }

@@ -2,7 +2,7 @@
 
 It is used in [MarkdownEditView](https://github.com/erdinc09/MarkdownEditView).  
 I added line number data all tokens in order to sync the editor and preview.
-Code block syncing must be emulated by client as [MarkdownEditView/index_template.html](https://github.com/erdinc09/MarkdownEditView/blob/editorsynch/resources/index_template.html). 
+Code block syncing must be emulated by client as [MarkdownEditView/index_template.html](https://github.com/erdinc09/MarkdownEditView/blob/main/resources/index_template.html). 
 
 __Original README:__
 ---------------
